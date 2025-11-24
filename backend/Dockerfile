@@ -1,5 +1,5 @@
 # backend/Dockerfile
-FROM golang:1.23-alpine
+FROM golang:1.24-alpine
 
 # Gerekli sistem araçlarını yükle
 RUN apk add --no-cache git
