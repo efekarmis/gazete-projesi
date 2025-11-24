@@ -1,65 +1,237 @@
-import Image from "next/image";
+import { getArticles, getHeadlines, getCategories } from '@/lib/api';
+import { Article, Category } from '@/types';
+import Link from 'next/link';
+import { Newspaper, Search } from 'lucide-react'; // İkonlar
+import { format } from 'date-fns'; // Tarih formatlama
+import { tr } from 'date-fns/locale'; // Türkçe tarih için
 
-export default function Home() {
+export default async function Home() {
+  // 1. Verileri Çek
+  const headlinesData: Promise<Article[]> = getHeadlines();
+  const articlesData: Promise<Article[]> = getArticles();
+  const categoriesData: Promise<Category[]> = getCategories();
+
+  const [headlines, articles, categories] = await Promise.all([
+    headlinesData, 
+    articlesData, 
+    categoriesData
+  ]);
+
+  // Manşet Mantığı: İlk haber Büyük, sonraki 2 haber yanındaki küçükler
+  const mainHeadline = headlines[0];
+  const subHeadlines = headlines.slice(1, 3);
+  
+  // Bugünün Tarihi
+  const currentDate = format(new Date(), 'd MMMM yyyy, EEEE', { locale: tr });
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-dark-bg text-light-text font-display">
+      
+      {/* --- HEADER (NAVBAR) --- */}
+      <div className="w-full bg-dark-bg/80 shadow-sm sticky top-0 z-50 backdrop-blur-sm border-b border-dark-border">
+        <div className="max-w-7xl mx-auto">
+          <header className="flex items-center justify-between whitespace-nowrap px-4 sm:px-6 py-3">
+            {/* Logo */}
+            <div className="flex items-center gap-4 text-white">
+              <div className="size-6 text-primary">
+                <Newspaper />
+              </div>
+              <h2 className="text-xl font-bold tracking-tight font-serif">Yerel Gazete</h2>
+            </div>
+
+            {/* Menü (Kategoriler) */}
+            <nav className="hidden md:flex items-center gap-9">
+              {categories.map((cat) => (
+                <Link 
+                  key={cat.ID} 
+                  href={`/kategori/${cat.slug}`} 
+                  className="text-sm font-medium text-light-text-secondary hover:text-white transition-colors uppercase"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Tarih ve Arama */}
+            <div className="flex items-center gap-4">
+              <p className="text-light-text-secondary text-sm font-normal hidden sm:block">
+                {currentDate}
+              </p>
+              <button className="flex items-center justify-center rounded-full h-10 w-10 bg-dark-card text-light-text-secondary hover:bg-dark-border/50 hover:text-white transition-colors">
+                <Search size={20} />
+              </button>
+            </div>
+          </header>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </div>
+
+      {/* --- MAIN CONTENT --- */}
+      <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6">
+        
+        {/* HERO SECTION (Slider Alanı) */}
+        {mainHeadline && (
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            
+            {/* Büyük Manşet (Sol) */}
+            <div className="lg:col-span-2">
+              <div className="flex flex-col rounded-lg bg-dark-card border border-dark-border overflow-hidden h-full">
+                <div 
+                  className="w-full bg-center bg-no-repeat aspect-[16/9] bg-cover" 
+                  style={{ backgroundImage: `url("${mainHeadline.image_url}")` }}
+                ></div>
+                <div className="p-6">
+                  <span className="text-primary text-sm font-bold uppercase mb-2">
+                    {mainHeadline.category?.name || 'Gündem'}
+                  </span>
+                  <Link href={`/haber/${mainHeadline.slug}`}>
+                    <h1 className="font-serif text-3xl md:text-4xl font-bold leading-tight text-white mb-3 hover:text-primary transition-colors">
+                      {mainHeadline.title}
+                    </h1>
+                  </Link>
+                  <p className="text-light-text text-base leading-relaxed line-clamp-2">
+                    {mainHeadline.summary}
+                  </p>
+                  <Link href={`/haber/${mainHeadline.slug}`}>
+                    <button className="mt-4 rounded-lg h-10 px-5 bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors">
+                      Haberi Oku
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Yan Manşetler (Sağ) */}
+            <div className="flex flex-col gap-6">
+              {subHeadlines.map((news) => (
+                <div key={news.ID} className="p-4 bg-dark-card rounded-lg border border-dark-border h-full">
+                  <div className="flex items-stretch justify-between gap-4 h-full">
+                    <div className="flex flex-[2_2_0px] flex-col gap-2">
+                      <Link href={`/haber/${news.slug}`}>
+                        <p className="text-white text-base font-bold leading-tight hover:text-primary line-clamp-3">
+                          {news.title}
+                        </p>
+                      </Link>
+                      <p className="text-light-text-secondary text-xs mt-auto">
+                        {format(new Date(news.published_at), 'd MMM yyyy', { locale: tr })}
+                      </p>
+                    </div>
+                    <div 
+                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg flex-1" 
+                      style={{ backgroundImage: `url("${news.image_url}")` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* --- ALT KISIM (Grid ve Sidebar) --- */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Sol Kolon: Son Haberler Listesi */}
+          <div className="lg:col-span-2">
+            <h2 className="font-serif text-2xl font-bold border-b-2 border-primary pb-2 mb-6 text-white">
+              Son Dakika
+            </h2>
+            <div className="space-y-6">
+              {articles.map((news) => (
+                <div key={news.ID} className="flex flex-col sm:flex-row gap-4 p-4 bg-dark-card rounded-lg border border-dark-border hover:border-primary/50 transition-colors">
+                  <div 
+                    className="w-full sm:w-1/3 h-48 sm:h-auto bg-center bg-no-repeat bg-cover rounded-lg shrink-0" 
+                    style={{ backgroundImage: `url("${news.image_url}")` }}
+                  ></div>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-bold text-primary uppercase">
+                        {news.category?.name}
+                      </span>
+                      <span className="text-light-text-secondary">•</span>
+                      <p className="text-light-text-secondary">
+                        {format(new Date(news.published_at), 'd MMMM yyyy', { locale: tr })}
+                      </p>
+                    </div>
+                    <Link href={`/haber/${news.slug}`}>
+                      <h3 className="text-white text-lg font-bold leading-tight hover:text-primary transition-colors">
+                        {news.title}
+                      </h3>
+                    </Link>
+                    <p className="text-light-text text-sm leading-normal line-clamp-3">
+                      {news.summary}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sağ Kolon: Sidebar (Eczane, Vefat vb.) */}
+          <aside className="space-y-8">
+            
+            {/* Nöbetçi Eczane Widget */}
+            <div className="p-4 bg-dark-card rounded-lg border border-dark-border">
+              <h3 className="font-serif text-lg font-bold mb-4 text-white flex items-center gap-2">
+                Nöbetçi Eczane
+                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              </h3>
+              <div className="space-y-2">
+                <p className="font-bold text-primary text-xl">Merkez Eczanesi</p>
+                <p className="text-sm text-light-text">Atatürk Cad. No:12 (Belediye Karşısı)</p>
+                <p className="text-sm text-light-text font-mono">Tel: (0212) 555 12 34</p>
+                <button className="w-full mt-2 py-2 rounded bg-green-700 text-white text-xs font-bold uppercase hover:bg-green-600 transition">
+                  Haritada Göster
+                </button>
+              </div>
+            </div>
+
+            {/* Vefat İlanları Widget */}
+            <div className="p-4 bg-dark-card rounded-lg border border-dark-border">
+              <h3 className="font-serif text-lg font-bold mb-4 text-white">Vefat İlanları</h3>
+              <ul className="space-y-3">
+                {/* Şimdilik manuel veri, sonra buraya API bağlarız */}
+                <li className="border-b border-dark-border pb-2">
+                  <p className="font-semibold text-light-text">Ahmet Yılmaz</p>
+                  <p className="text-xs text-light-text-secondary">Defin: Merkez Mezarlığı</p>
+                </li>
+                <li className="border-b border-dark-border pb-2">
+                  <p className="font-semibold text-light-text">Fatma Demir</p>
+                  <p className="text-xs text-light-text-secondary">Defin: Köy Mezarlığı</p>
+                </li>
+              </ul>
+              <button className="text-primary text-xs font-bold mt-2 hover:underline">
+                Tümünü Gör →
+              </button>
+            </div>
+
+            {/* Çok Okunanlar Widget */}
+            <div className="p-4 bg-dark-card rounded-lg border border-dark-border">
+              <h3 className="font-serif text-lg font-bold mb-4 text-white">Çok Okunanlar</h3>
+              <ol className="list-decimal list-inside space-y-3 text-sm text-light-text">
+                {articles.slice(0, 5).map((news) => (
+                  <li key={news.ID}>
+                    <Link href={`/haber/${news.slug}`} className="hover:text-primary transition-colors line-clamp-1">
+                      {news.title}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+          </aside>
+        </section>
       </main>
+
+      {/* --- FOOTER --- */}
+      <footer className="w-full bg-dark-card mt-12 border-t border-dark-border">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
+          <p className="text-light-text-secondary">© 2024 Yerel Gazete. Tüm hakları saklıdır.</p>
+          <div className="flex gap-6">
+            <Link href="#" className="text-light-text-secondary hover:underline hover:text-white">Hakkımızda</Link>
+            <Link href="#" className="text-light-text-secondary hover:underline hover:text-white">İletişim</Link>
+            <Link href="#" className="text-light-text-secondary hover:underline hover:text-white">Künye</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
