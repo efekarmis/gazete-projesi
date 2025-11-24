@@ -17,4 +17,7 @@ func SetupRoutes(app *fiber.App) {
 
 	// Kategori Rotaları
 	api.Get("/categories", handlers.GetCategories) // Menü kategorileri
+
+	// Mevcut satırların altına ekle:
+	api.Get("/articles/category/:slug", handlers.GetArticlesByCategory)
 }

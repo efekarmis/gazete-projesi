@@ -54,3 +54,21 @@ func GetArticleBySlug(c *fiber.Ctx) error {
 
 	return c.JSON(article)
 }
+
+// Kategori Slug'ına göre haberleri getir (Örn: /api/articles/category/spor)
+func GetArticlesByCategory(c *fiber.Ctx) error {
+	slug := c.Params("slug")
+	var category models.Category
+	var articles []models.Article
+
+	// 1. Önce kategoriyi bul (ID'sini almak için)
+	result := database.DB.Where("slug = ?", slug).First(&category)
+	if result.Error != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Kategori bulunamadı"})
+	}
+
+	// 2. O kategori ID'sine sahip haberleri çek
+	database.DB.Preload("Category").Where("category_id = ?", category.ID).Order("published_at desc").Find(&articles)
+
+	return c.JSON(articles)
+}

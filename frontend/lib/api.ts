@@ -34,3 +34,30 @@ export async function getCategories() {
   if (!res.ok) return [];
   return res.json();
 }
+
+export async function getArticle(slug: string) {
+  // Backend'e slug soruyoruz
+  const res = await fetch(`${API_URL}/articles/${slug}`, {
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    return null; // Haber bulunamazsa null döner
+  }
+
+  return res.json();
+}
+
+// En alta ekle:
+
+export async function getArticlesByCategory(slug: string) {
+  const res = await fetch(`${API_URL}/articles/category/${slug}`, {
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  return res.json();
+}

@@ -25,47 +25,6 @@ export default async function Home() {
   const currentDate = format(new Date(), 'd MMMM yyyy, EEEE', { locale: tr });
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-dark-bg text-light-text font-display">
-      
-      {/* --- HEADER (NAVBAR) --- */}
-      <div className="w-full bg-dark-bg/80 shadow-sm sticky top-0 z-50 backdrop-blur-sm border-b border-dark-border">
-        <div className="max-w-7xl mx-auto">
-          <header className="flex items-center justify-between whitespace-nowrap px-4 sm:px-6 py-3">
-            {/* Logo */}
-            <div className="flex items-center gap-4 text-white">
-              <div className="size-6 text-primary">
-                <Newspaper />
-              </div>
-              <h2 className="text-xl font-bold tracking-tight font-serif">Yerel Gazete</h2>
-            </div>
-
-            {/* Menü (Kategoriler) */}
-            <nav className="hidden md:flex items-center gap-9">
-              {categories.map((cat) => (
-                <Link 
-                  key={cat.ID} 
-                  href={`/kategori/${cat.slug}`} 
-                  className="text-sm font-medium text-light-text-secondary hover:text-white transition-colors uppercase"
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Tarih ve Arama */}
-            <div className="flex items-center gap-4">
-              <p className="text-light-text-secondary text-sm font-normal hidden sm:block">
-                {currentDate}
-              </p>
-              <button className="flex items-center justify-center rounded-full h-10 w-10 bg-dark-card text-light-text-secondary hover:bg-dark-border/50 hover:text-white transition-colors">
-                <Search size={20} />
-              </button>
-            </div>
-          </header>
-        </div>
-      </div>
-
-      {/* --- MAIN CONTENT --- */}
       <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6">
         
         {/* HERO SECTION (Slider Alanı) */}
@@ -104,8 +63,10 @@ export default async function Home() {
             <div className="flex flex-col gap-6">
               {subHeadlines.map((news) => (
                 <div key={news.ID} className="p-4 bg-dark-card rounded-lg border border-dark-border h-full">
-                  <div className="flex items-stretch justify-between gap-4 h-full">
-                    <div className="flex flex-[2_2_0px] flex-col gap-2">
+                  <div className="flex items-start justify-between gap-4 h-full">
+                    
+                    {/* Yazı Alanı */}
+                    <div className="flex flex-1 flex-col gap-2">
                       <Link href={`/haber/${news.slug}`}>
                         <p className="text-white text-base font-bold leading-tight hover:text-primary line-clamp-3">
                           {news.title}
@@ -115,10 +76,13 @@ export default async function Home() {
                         {format(new Date(news.published_at), 'd MMM yyyy', { locale: tr })}
                       </p>
                     </div>
+
+                    {/* Resim Alanı (DÜZELTİLDİ) */}
                     <div 
-                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg flex-1" 
+                      className="w-32 h-24 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 border border-dark-border/50" 
                       style={{ backgroundImage: `url("${news.image_url}")` }}
                     ></div>
+                    
                   </div>
                 </div>
               ))}
@@ -221,17 +185,5 @@ export default async function Home() {
         </section>
       </main>
 
-      {/* --- FOOTER --- */}
-      <footer className="w-full bg-dark-card mt-12 border-t border-dark-border">
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
-          <p className="text-light-text-secondary">© 2024 Yerel Gazete. Tüm hakları saklıdır.</p>
-          <div className="flex gap-6">
-            <Link href="#" className="text-light-text-secondary hover:underline hover:text-white">Hakkımızda</Link>
-            <Link href="#" className="text-light-text-secondary hover:underline hover:text-white">İletişim</Link>
-            <Link href="#" className="text-light-text-secondary hover:underline hover:text-white">Künye</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
   );
 }
