@@ -19,6 +19,7 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
+	app.Static("/uploads", "./uploads")
 	// Rotaları Kur (SetupRoutes fonksiyonunu çağır)
 	routes.SetupRoutes(app) // <-- YENİ KISIM
 

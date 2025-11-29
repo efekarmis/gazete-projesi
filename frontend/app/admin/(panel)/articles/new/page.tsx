@@ -18,7 +18,8 @@ export default function NewArticlePage() {
   const [content, setContent] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [isHeadline, setIsHeadline] = useState(false);
-  const [imageUrl, setImageUrl] = useState(""); // Şimdilik manuel link, sonra upload yapacağız
+  const [imageUrl, setImageUrl] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   // Kategorileri Çek
   useEffect(() => {
@@ -30,6 +31,51 @@ export default function NewArticlePage() {
     const val = e.target.value;
     setTitle(val);
     setSlug(val.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, ""));
+  };
+
+  // 1. ASIL YÜKLEME İŞİNİ YAPAN FONKSİYON (Ortak Kullanım)
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch("http://localhost:8080/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Yükleme başarısız");
+
+      const data = await res.json();
+      setImageUrl(data.url);
+    } catch (error) {
+      alert("Resim yüklenirken hata oluştu!");
+    }
+  };
+
+  // 2. INPUT'TAN SEÇİLİNCE ÇALIŞAN
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+  };
+
+  // 3. SÜRÜKLEME OLAYLARI (DRAG & DROP)
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Tarayıcının dosyayı açmasını engelle
+    setIsDragging(true); // Görsel efekti aç
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false); // Görsel efekti kapat
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0]; // Sürüklenen dosyayı al
+    if (file) uploadFile(file);
   };
 
   // Kaydetme Fonksiyonu
@@ -68,6 +114,29 @@ export default function NewArticlePage() {
 
     } catch (error: any) {
       alert("Hata: " + error.message);
+    }
+  };
+
+    // Resim Yükleme Fonksiyonu
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch("http://localhost:8080/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Yükleme başarısız");
+
+      const data = await res.json();
+      setImageUrl(data.url); // Gelen URL'i state'e yaz (Otomatik doldur)
+    } catch (error) {
+      alert("Resim yüklenirken hata oluştu!");
     }
   };
 
@@ -127,18 +196,49 @@ export default function NewArticlePage() {
           {/* SAĞ KOLON (Ayarlar) */}
           <div className="lg:col-span-1 flex flex-col gap-6">
             
-            {/* Resim Yükleme (Şimdilik Input) */}
+            {/* Resim Yükleme (Drag & Drop Aktif) */}
             <div className="bg-card-dark rounded-lg border border-dark-border p-6">
-              <label className="block text-sm font-medium mb-2">Kapak Resmi URL</label>
-              <div className="flex flex-col gap-2">
-                <input 
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full bg-background-dark border border-dark-border rounded-md p-2 text-sm"
-                  placeholder="https://..."
-                />
+              <label className="block text-sm font-medium mb-2">Kapak Resmi</label>
+              
+              <div className="flex flex-col gap-4">
+                <label 
+                  // Olayları buraya bağlıyoruz
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`flex justify-center items-center w-full px-6 py-10 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200
+                    ${isDragging 
+                      ? "border-primary bg-primary/10 scale-[1.02]" // Sürüklerken bu stil
+                      : "border-dark-border hover:border-primary/50 bg-background-dark/50" // Normal stil
+                    }`}
+                >
+                  <div className="text-center pointer-events-none"> {/* pointer-events-none önemli */}
+                    <ImageUp size={40} className={`mx-auto mb-2 transition-colors ${isDragging ? "text-primary" : "text-light-text-secondary"}`} />
+                    <p className="text-sm text-light-text-secondary">
+                      <span className="font-semibold text-primary">Dosya Seç</span> veya sürükle bırak
+                    </p>
+                    <p className="text-xs text-light-text-secondary/70 mt-1">PNG, JPG, GIF (Max 5MB)</p>
+                  </div>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    onChange={handleInputChange} // Değişti
+                    accept="image/*" 
+                  />
+                </label>
+
+                {/* Önizleme */}
                 {imageUrl && (
-                  <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-md border border-dark-border" />
+                  <div className="relative group">
+                    <img src={imageUrl} alt="Preview" className="w-full h-40 object-cover rounded-md border border-dark-border" />
+                    <button 
+                      onClick={() => setImageUrl("")}
+                      className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      title="Resmi Kaldır"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

@@ -13,6 +13,7 @@ func SetupRoutes(app *fiber.App) {
 	// Auth (Giriş)
 	api.Post("/login", handlers.Login)
 	api.Post("/articles", handlers.CreateArticle)
+	api.Post("/upload", handlers.UploadFile)
 
 	// Haber Rotaları
 	api.Get("/articles", handlers.GetAllArticles)         // Tüm haberler
