@@ -34,17 +34,21 @@ export default function DashboardTable({ initialArticles }: Props) {
 
   // Haberi Sil
   const handleDelete = async (id: number) => {
-    if (!confirm("Bu haberi silmek istediğinize emin misiniz?")) return;
+    if (!confirm("Bu haberi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) return;
 
     try {
-      // Backend'e silme isteği (Token lazım olacak, şimdilik basit fetch)
-      // const res = await fetch(`http://localhost:8080/api/articles/${id}`, { method: 'DELETE' });
+      const res = await fetch(`http://localhost:8080/api/articles/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) throw new Error("Silme başarısız");
       
-      // Listeden çıkar
+      // Listeden çıkar (UI Güncellemesi)
       setArticles(articles.filter(a => a.ID !== id));
-      router.refresh(); // Sayfayı yenile
+      alert("Haber silindi.");
+      
     } catch (error) {
-      alert("Silme işlemi başarısız");
+      alert("Silme işlemi sırasında hata oluştu.");
     }
   };
 
@@ -115,7 +119,7 @@ export default function DashboardTable({ initialArticles }: Props) {
                 {/* İşlemler */}
                 <td className="px-4 py-3 align-middle">
                   <div className="flex items-center gap-2">
-                    <Link href={`/admin/articles/edit/${news.ID}`}>
+                    <Link href={`/admin/articles/form?id=${news.ID}`}>
                       <button className="p-2 rounded-lg text-gray-400 dark:text-light-text-secondary hover:bg-white/10 hover:text-white transition-colors">
                         <Edit size={18} />
                       </button>

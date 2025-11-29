@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"gazete-backend/database"
 	"gazete-backend/models"
 	"time"
@@ -134,4 +135,93 @@ func CreateArticle(c *fiber.Ctx) error {
 	}
 
 	return c.Status(201).JSON(article)
+}
+
+// ID'ye göre tek haberi getir (Admin Edit sayfası için)
+// ID'ye göre tek haberi getir (Debug Modu)
+func GetArticleByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	// 1. Terminale yazdır: Hangi ID isteniyor?
+	fmt.Println("------------------------------------------------")
+	fmt.Println("🔍 İSTENEN ID:", id)
+
+	var article models.Article
+
+	// 2. Sorguyu yap ve hatayı detaylı yakala
+	result := database.DB.First(&article, id)
+
+	if result.Error != nil {
+		// 3. Hata varsa terminale yazdır
+		fmt.Println("❌ HATA OLUŞTU:", result.Error)
+		fmt.Println("------------------------------------------------")
+		return c.Status(404).JSON(fiber.Map{
+			"error":   "Haber bulunamadı",
+			"details": result.Error.Error(), // Hatayı frontend'e de gönderelim
+		})
+	}
+
+	fmt.Println("✅ HABER BULUNDU:", article.Title)
+	fmt.Println("------------------------------------------------")
+
+	return c.JSON(article)
+}
+
+// Haberi Güncelle
+func UpdateArticle(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var article models.Article
+
+	// 1. Önce haberi bul
+	if err := database.DB.First(&article, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Haber bulunamadı"})
+	}
+
+	// 2. Gelen veriyi al
+	type UpdateInput struct {
+		Title      string `json:"title"`
+		Slug       string `json:"slug"`
+		Summary    string `json:"summary"`
+		Content    string `json:"content"`
+		ImageURL   string `json:"image_url"`
+		CategoryID uint   `json:"category_id"`
+		IsHeadline bool   `json:"is_headline"`
+	}
+
+	var input UpdateInput
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Veri formatı hatalı"})
+	}
+
+	// 3. Verileri güncelle
+	article.Title = input.Title
+	article.Slug = input.Slug
+	article.Summary = input.Summary
+	article.Content = input.Content
+	article.ImageURL = input.ImageURL
+	article.CategoryID = input.CategoryID
+	article.IsHeadline = input.IsHeadline
+
+	// Not: PublishedAt'i güncellemiyoruz, ilk yayın tarihi kalsın.
+
+	// 4. Kaydet
+	database.DB.Save(&article)
+
+	return c.JSON(article)
+}
+
+// Haberi Sil (Soft Delete)
+func DeleteArticle(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var article models.Article
+
+	// 1. Haberi bul
+	if err := database.DB.First(&article, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Haber bulunamadı"})
+	}
+
+	// 2. Sil (GORM DeletedAt sütununu doldurur, veriyi tamamen silmez)
+	database.DB.Delete(&article)
+
+	return c.JSON(fiber.Map{"message": "Haber başarıyla silindi"})
 }

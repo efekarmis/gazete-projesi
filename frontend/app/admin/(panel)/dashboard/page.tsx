@@ -22,7 +22,7 @@ export default async function DashboardPage() {
         <h1 className="text-black dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
           Dashboard
         </h1>
-        <Link href="/admin/articles/new">
+        <Link href="/admin/articles/form">
           <button className="flex items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold hover:bg-primary/90 transition-colors">
             <Plus size={20} />
             <span className="truncate">Yeni Haber Ekle</span>

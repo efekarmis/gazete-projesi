@@ -26,4 +26,9 @@ func SetupRoutes(app *fiber.App) {
 	// Mevcut satırların altına ekle:
 	api.Get("/articles/category/:slug", handlers.GetArticlesByCategory)
 
+	// Admin İşlemleri
+	api.Get("/articles/id/:id", handlers.GetArticleByID) // Düzenleme sayfasına veri çekmek için
+	api.Put("/articles/:id", handlers.UpdateArticle)     // Güncelleme
+	api.Delete("/articles/:id", handlers.DeleteArticle)  // Silme
+
 }
