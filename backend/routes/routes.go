@@ -10,6 +10,9 @@ func SetupRoutes(app *fiber.App) {
 	// Tüm API rotaları "/api" ile başlayacak
 	api := app.Group("/api")
 
+	// Auth (Giriş)
+	api.Post("/login", handlers.Login)
+
 	// Haber Rotaları
 	api.Get("/articles", handlers.GetAllArticles)         // Tüm haberler
 	api.Get("/headlines", handlers.GetHeadlines)          // Manşetler
@@ -20,4 +23,5 @@ func SetupRoutes(app *fiber.App) {
 
 	// Mevcut satırların altına ekle:
 	api.Get("/articles/category/:slug", handlers.GetArticlesByCategory)
+
 }
