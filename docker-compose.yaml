@@ -58,5 +58,6 @@ services:
     environment:
       # Next.js'in Backend'e Docker ağı üzerinden ulaşması için
       NEXT_PUBLIC_API_URL: http://localhost:8080 
+      WATCHPACK_POLLING: "true"
     depends_on:
       - backend
